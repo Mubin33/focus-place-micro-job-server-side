@@ -92,8 +92,6 @@ async function run() {
       const result = await userCollection.updateOne(filter, updated)
       res.send(result)
     })
-
-
     app.get('/user/:email',verifyToken, async(req, res)=>{
       const email = req.params.email
       const query = {email}
@@ -137,6 +135,18 @@ async function run() {
       const result = await taskCollection.find().toArray()
       res.send(result)
     })
+    app.get('/update/task/:id',   async(req, res)=>{ 
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await taskCollection.findOne(query) 
+      res.send(result)
+    })
+    app.get('/my-task/:email', verifyToken, async(req, res)=>{ //verifyBuyer
+      const email = req.params.email
+      const query = {buyerEmail:email}
+      const result = await taskCollection.find(query).toArray()
+      res.send(result)
+    })
     app.post('/task',verifyToken, async(req, res)=>{  //ekhane {verifyBuyer} middelware boshbe
       const task = req.body
       const result = await taskCollection.insertOne(task)
@@ -147,7 +157,26 @@ async function run() {
       const query = {_id: new ObjectId(id)}
       const result = await taskCollection.deleteOne(query)
       res.send(result)
-    })
+    }) 
+
+  app.patch("/task/update/:id", verifyToken, async (req, res) => { //buyerVerify
+    const id = req.params.id;
+    const updateInfo = req.body; 
+    const filter = { _id: new ObjectId(id) };
+    const updateDoc = {
+      $set: updateInfo, // Dynamically update only the fields sent in the request
+    };
+   
+      const result = await taskCollection.updateOne(filter, updateDoc);
+      res.send(result); 
+  });
+  
+
+
+
+
+
+
  
   
 
