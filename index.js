@@ -13,7 +13,7 @@ app.use(morgan("dev"));
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.USER_PASS}@cluster0.nqyrr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -72,6 +72,28 @@ async function run() {
 
 
     // users
+    app.get('/users', verifyToken, async(req, res)=>{ //verifyAdmin
+      const result = await userCollection.find().toArray()
+      res.send(result)
+    })
+    app.delete('/user/delete/:id', verifyToken, async(req, res)=>{ //verifyAdmin
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await userCollection.deleteOne(query)
+      res.send(result)
+    })
+    app.patch('/user/role/update/:id',verifyToken, async(req, res)=>{ //verifyAdmin
+      const id = req.params.id
+      const role = req.body
+      const filter = {_id: new ObjectId(id)}
+      const updated = {
+        $set:{role: role.role},
+      }
+      const result = await userCollection.updateOne(filter, updated)
+      res.send(result)
+    })
+
+
     app.get('/user/:email',verifyToken, async(req, res)=>{
       const email = req.params.email
       const query = {email}
@@ -88,7 +110,22 @@ async function run() {
       }  
       const result = await userCollection.insertOne(user)
       res.send(result)
-    })
+    }) 
+    app.patch('/users/amount/update/:email', verifyToken, async (req, res) => { //verifyBuyer
+      const email = req.params.email; 
+      const { amount } = req.body; 
+  
+      const filter = { email: email };  
+      const updateDoc = {
+        $set: {
+          amount: amount,  
+        },
+      };
+     
+        const result = await userCollection.updateOne(filter, updateDoc); 
+        res.send(result)
+    });
+    
 
 
 
@@ -96,15 +133,25 @@ async function run() {
 
 
     // task
-    app.post('/task',verifyToken, async(req, res)=>{
+    app.get('/task', verifyToken, async(req, res)=>{ 
+      const result = await taskCollection.find().toArray()
+      res.send(result)
+    })
+    app.post('/task',verifyToken, async(req, res)=>{  //ekhane {verifyBuyer} middelware boshbe
       const task = req.body
       const result = await taskCollection.insertOne(task)
+      res.send(result)
+    })
+    app.delete('/task/delete/:id', verifyToken, async(req, res)=>{
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await taskCollection.deleteOne(query)
       res.send(result)
     })
  
   
 
-    // Send a ping to confirm a successful connection
+    
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
