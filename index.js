@@ -1,5 +1,5 @@
 const express = require('express')
-// const jwt = require('jsonwebtoken'); 
+const jwt = require('jsonwebtoken'); 
 const app = express()
 require('dotenv').config()
 const cors = require('cors')
@@ -32,9 +32,52 @@ async function run() {
 
 
     const userCollection = client.db('focusPlace').collection('users') 
- 
+    const taskCollection = client.db('focusPlace').collection('task') 
+
+    
 
 
+    const verifyToken = (req, res, next)=>{
+      // console.log(req.headers.authorization)
+      const isToken = req.headers.authorization
+      if(!isToken){
+        return res.status(401).send({massage:"UnAuthorize"})
+      } 
+      const onlyToken = req.headers.authorization.split(' ')[1] 
+      jwt.verify(onlyToken, process.env.SECRET_JWT_KEY, (err, decoded)=>{
+        if(err){
+          return res.status(401).send({massage:"UnAuthorize"})
+        }
+        req.decoded=decoded
+        next()
+      })
+    }
+
+
+    // json web token
+    app.post('/jwt',  async(req, res)=>{
+      const user = req.body
+      const token = jwt.sign(user, process.env.SECRET_JWT_KEY, {expiresIn: '5h'})
+      
+      res.send({token}) 
+    })
+
+
+
+
+
+
+
+
+
+
+    // users
+    app.get('/user/:email',verifyToken, async(req, res)=>{
+      const email = req.params.email
+      const query = {email}
+      const result = await userCollection.findOne(query)
+      res.send(result)
+    })
     app.post('/users/add', async(req, res)=>{
       const user = req.body
       // checking user isExist?
@@ -47,6 +90,17 @@ async function run() {
       res.send(result)
     })
 
+
+
+
+
+
+    // task
+    app.post('/task',verifyToken, async(req, res)=>{
+      const task = req.body
+      const result = await taskCollection.insertOne(task)
+      res.send(result)
+    })
  
   
 
