@@ -171,20 +171,58 @@ async function run() {
       const result = await taskCollection.updateOne(filter, updateDoc);
       res.send(result); 
   });
-  app.patch('/task/worker/update/:id', verifyToken, async (req, res) => { 
-    const id = req.params.id; 
-    const query = { _id: new ObjectId(id) };  
-    const   {after_required_workers}  = req.body; 
-    console.log(after_required_workers)
+  // app.patch('/task/worker/update/:id', verifyToken, async (req, res) => { 
+  //   const id = req.params.id; 
+  //   const query = { _id: new ObjectId(id) };  
+  //   const   {after_required_workers}  = req.body; 
+  //   console.log(after_required_workers)
 
-    const updateDoc = {
-      $set: { required_workers: after_required_workers },
-    };
+  //   const updateDoc = {
+  //     $set: { required_workers: after_required_workers },
+  //   };
    
-      const result = await taskCollection.updateOne(query, updateDoc); 
-      res.send(result)
-  });
+  //     const result = await taskCollection.updateOne(query, updateDoc); 
+  //     res.send(result)
+  // });
   
+  app.patch('/task/worker/update/:id', verifyToken, async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const { after_required_workers } = req.body;
+
+    if (after_required_workers < 0) {
+        return res.status(400).send({ error: "Invalid workers count. Cannot be less than 0." });
+    }
+
+    try {
+        const task = await taskCollection.findOne(query);
+        if (!task) {
+            return res.status(404).send({ error: "Task not found." });
+        }
+
+        const updateDoc = { $set: { required_workers: after_required_workers } };
+        const result = await taskCollection.updateOne(query, updateDoc);
+
+        if (result.modifiedCount === 0) {
+            return res.status(500).send({ error: "Failed to update task." });
+        }
+
+        res.send({ success: true, message: "Task updated successfully.", result });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: "An error occurred while updating the task." });
+    }
+});
+
+ 
+
+
+
+
+
+
+
+
 
 
 
@@ -200,11 +238,27 @@ async function run() {
     const result = await taskApplyCollection.find(query).toArray()
     res.send(result)
   })
+  app.get('/buyer/apply/task/:email', verifyToken, async(req, res)=>{ //verify buyer
+    const email = req.params.email
+    const query = {buyerEmail: email}
+    const result = await taskApplyCollection.find(query).toArray()
+    res.send(result)
+  })
   app.post('/worker/apply/task',verifyToken, async(req, res)=>{   
       const task = req.body
       const result = await taskApplyCollection.insertOne(task)
       res.send(result)
     }) 
+    app.patch('/apply/task/status/update/:id',verifyToken, async(req, res)=>{ //verifyBuyer
+      const id = req.params.id
+      const status = req.body 
+      const filter = {_id: new ObjectId(id)}
+      const updated = {
+        $set:{status: status.status},
+      }
+      const result = await taskApplyCollection.updateOne(filter, updated)
+      res.send(result)
+    })
 
 
 
