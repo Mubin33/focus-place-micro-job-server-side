@@ -33,6 +33,7 @@ async function run() {
 
     const userCollection = client.db('focusPlace').collection('users') 
     const taskCollection = client.db('focusPlace').collection('task') 
+    const taskApplyCollection = client.db('focusPlace').collection('task-apply') 
 
     
 
@@ -135,7 +136,7 @@ async function run() {
       const result = await taskCollection.find().toArray()
       res.send(result)
     })
-    app.get('/update/task/:id',   async(req, res)=>{ 
+    app.get('/per/task/:id',   async(req, res)=>{ 
       const id = req.params.id
       const query = {_id: new ObjectId(id)}
       const result = await taskCollection.findOne(query) 
@@ -170,7 +171,43 @@ async function run() {
       const result = await taskCollection.updateOne(filter, updateDoc);
       res.send(result); 
   });
+  app.patch('/task/worker/update/:id', verifyToken, async (req, res) => { 
+    const id = req.params.id; 
+    const query = { _id: new ObjectId(id) };  
+    const   {after_required_workers}  = req.body; 
+    console.log(after_required_workers)
+
+    const updateDoc = {
+      $set: { required_workers: after_required_workers },
+    };
+   
+      const result = await taskCollection.updateOne(query, updateDoc); 
+      res.send(result)
+  });
   
+
+
+
+
+
+
+
+
+  // worker task apply
+  app.get('/apply/task/:email', verifyToken, async(req, res)=>{
+    const email = req.params.email
+    const query = {worker_email: email}
+    const result = await taskApplyCollection.find(query).toArray()
+    res.send(result)
+  })
+  app.post('/worker/apply/task',verifyToken, async(req, res)=>{   
+      const task = req.body
+      const result = await taskApplyCollection.insertOne(task)
+      res.send(result)
+    }) 
+
+
+
 
 
 
