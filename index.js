@@ -5,6 +5,10 @@ require('dotenv').config()
 const cors = require('cors')
 const port = process.env.PORT || 5000
 const morgan = require("morgan");
+const Stripe = require("stripe");
+
+const stripe = new Stripe(`${process.env.PAYMENT_SECRET_KEY}`);
+
 
 app.use(cors())
 app.use(express.json()) 
@@ -29,6 +33,37 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
+
+
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+    
+      try {
+        // Ensure the price is converted to cents
+        const amount = Math.round(price * 100);
+    
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount, // Correct parameter name
+          currency: "usd",
+        });
+    
+        res.send({
+          clientSecret: paymentIntent.client_secret,
+        });
+      } catch (error) {
+        console.error("Error creating payment intent:", error.message);
+        res.status(500).json({ error: error.message });
+      }
+    });
+    
+
+
+
+
+
+
+
+
 
 
     const userCollection = client.db('focusPlace').collection('users') 
@@ -113,7 +148,7 @@ async function run() {
     app.patch('/users/amount/update/:email', verifyToken, async (req, res) => { //verifyBuyer
       const email = req.params.email; 
       const { amount } = req.body; 
-  
+      console.log(amount)
       const filter = { email: email };  
       const updateDoc = {
         $set: {
