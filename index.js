@@ -69,6 +69,7 @@ async function run() {
     const userCollection = client.db('focusPlace').collection('users') 
     const taskCollection = client.db('focusPlace').collection('task') 
     const taskApplyCollection = client.db('focusPlace').collection('task-apply') 
+    const paymentCollection = client.db('focusPlace').collection('payment') 
 
     
 
@@ -145,7 +146,7 @@ async function run() {
       const result = await userCollection.insertOne(user)
       res.send(result)
     }) 
-    app.patch('/users/amount/update/:email', verifyToken, async (req, res) => { //verifyBuyer
+    app.patch('/users/amount/update/:email', verifyToken, async (req, res) => { 
       const email = req.params.email; 
       const { amount } = req.body; 
       console.log(amount)
@@ -294,6 +295,31 @@ async function run() {
       const result = await taskApplyCollection.updateOne(filter, updated)
       res.send(result)
     })
+
+
+
+
+
+
+
+
+
+
+
+    // buyer payment
+    app.post('/payment',verifyToken, async(req, res)=>{ //buyerVerify
+      const query = req.body
+      const result = await paymentCollection.insertOne(query)
+      res.send(result)
+    })
+    app.get('/payment/:email', verifyToken, async(req, res)=>{// verifyBuyer
+      const email = req.params.email
+      const query = {email: email}
+      const result  = await paymentCollection.find(query).toArray()
+      res.send(result)
+    })
+
+
 
 
 
