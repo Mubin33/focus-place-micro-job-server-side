@@ -70,6 +70,7 @@ async function run() {
     const taskCollection = client.db('focusPlace').collection('task') 
     const taskApplyCollection = client.db('focusPlace').collection('task-apply') 
     const paymentCollection = client.db('focusPlace').collection('payment') 
+    const withdrawCollection = client.db('focusPlace').collection('withdraw') 
 
     
 
@@ -155,8 +156,7 @@ async function run() {
         $set: {
           amount: amount,  
         },
-      };
-     
+      }; 
         const result = await userCollection.updateOne(filter, updateDoc); 
         res.send(result)
     });
@@ -318,6 +318,41 @@ async function run() {
       const result  = await paymentCollection.find(query).toArray()
       res.send(result)
     })
+
+
+
+
+
+
+
+    // worker withdraw
+    app.get('/withdraw',verifyToken, async(req, res)=>{ //verifyAdmin
+      const result = await withdrawCollection.find().toArray()
+      res.send(result)
+    })
+    app.post('/withdraw', verifyToken, async(req, res)=>{ //verifyWorker
+      const query = req.body
+      const result = await withdrawCollection.insertOne(query)
+      res.send(result)
+    })
+    app.get('/withdraw/:email', verifyToken, async(req, res)=>{
+      const email = req.params.email
+      const query ={workerEmail:email}
+      const result = await withdrawCollection.find(query).toArray()
+      req.send(result)
+    })
+
+    app.patch('/withdraw/status/update/:id',verifyToken, async(req, res)=>{ //verifyAdmin
+      const id = req.params.id
+      const status = req.body 
+      const filter = {_id: new ObjectId(id)}
+      const updated = {
+        $set:{status: status.status},
+      }
+      const result = await withdrawCollection.updateOne(filter, updated)
+      res.send(result)
+    })
+
 
 
 
