@@ -312,6 +312,10 @@ async function run() {
       const result = await paymentCollection.insertOne(query)
       res.send(result)
     })
+    app.get('/payment', verifyToken, async(req, res)=>{ //verifyAdmin
+      const result = await paymentCollection.find().toArray()
+      res.send(result)
+    })
     app.get('/payment/:email', verifyToken, async(req, res)=>{// verifyBuyer
       const email = req.params.email
       const query = {email: email}
