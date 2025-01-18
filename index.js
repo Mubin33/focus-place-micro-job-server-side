@@ -92,6 +92,55 @@ async function run() {
     }
 
 
+    // admin
+    const verifyAdmin = async(req, res, next)=>{
+      const email = req.decoded.email  
+      const query = {email:email}
+      const user = await userCollection.findOne(query)
+      const isAdmin = user?.role === 'admin'
+      if(!isAdmin){
+        return res.status(403).send({massage:"Forbidden"})
+      }
+      next()
+    }
+
+
+
+    // buyer
+    const verifyBuyer = async(req, res, next)=>{
+      const email = req.decoded.email  
+      const query = {email:email}
+      const user = await userCollection.findOne(query)
+      const isAdmin = user?.role === 'buyer'
+      if(!isAdmin){
+        return res.status(403).send({massage:"Forbidden"})
+      }
+      next()
+    }
+
+
+    // worker
+    const verifyWorker = async(req, res, next)=>{
+      const email = req.decoded.email  
+      const query = {email:email}
+      const user = await userCollection.findOne(query)
+      const isAdmin = user?.role === 'worker'
+      if(!isAdmin){
+        return res.status(403).send({massage:"Forbidden"})
+      }
+      next()
+    }
+
+
+
+
+
+
+
+
+
+
+
     // json web token
     app.post('/jwt',  async(req, res)=>{
       const user = req.body
@@ -110,17 +159,17 @@ async function run() {
 
 
     // users
-    app.get('/users', verifyToken, async(req, res)=>{ //verifyAdmin
+    app.get('/users', verifyToken, async(req, res)=>{ 
       const result = await userCollection.find().toArray()
       res.send(result)
     })
-    app.delete('/user/delete/:id', verifyToken, async(req, res)=>{ //verifyAdmin
+    app.delete('/user/delete/:id', verifyToken,verifyAdmin, async(req, res)=>{ //VerifyAdmin
       const id = req.params.id
       const query = {_id: new ObjectId(id)}
       const result = await userCollection.deleteOne(query)
       res.send(result)
     })
-    app.patch('/user/role/update/:id',verifyToken, async(req, res)=>{ //verifyAdmin
+    app.patch('/user/role/update/:id',verifyToken,verifyAdmin, async(req, res)=>{ //verifyAdmin
       const id = req.params.id
       const role = req.body
       const filter = {_id: new ObjectId(id)}
@@ -162,8 +211,7 @@ async function run() {
     });
     
 
-
- //emni after delete
+ 
 
 
 
@@ -193,13 +241,13 @@ async function run() {
       const result = await taskCollection.findOne(query) 
       res.send(result)
     })
-    app.get('/my-task/:email', verifyToken, async(req, res)=>{ //verifyBuyer
+    app.get('/my-task/:email', verifyToken,verifyBuyer,async(req, res)=>{ //verifyBuyer
       const email = req.params.email
       const query = {buyerEmail:email}
       const result = await taskCollection.find(query).toArray()
       res.send(result)
     })
-    app.post('/task',verifyToken, async(req, res)=>{  //ekhane {verifyBuyer} middelware boshbe
+    app.post('/task',verifyToken,verifyBuyer,  async(req, res)=>{  //ekhane {verifyBuyer} middelware boshbe
       const task = req.body
       const result = await taskCollection.insertOne(task)
       res.send(result)
@@ -211,7 +259,7 @@ async function run() {
       res.send(result)
     }) 
 
-  app.patch("/task/update/:id", verifyToken, async (req, res) => { //buyerVerify
+  app.patch("/task/update/:id", verifyToken,verifyBuyer, async (req, res) => { //buyerVerify
     const id = req.params.id;
     const updateInfo = req.body; 
     const filter = { _id: new ObjectId(id) };
@@ -279,18 +327,18 @@ async function run() {
     const result = await taskApplyCollection.find(query).toArray()
     res.send(result)
   })
-  app.get('/buyer/apply/task/:email', verifyToken, async(req, res)=>{ //verify buyer
+  app.get('/buyer/apply/task/:email', verifyToken,verifyBuyer, async(req, res)=>{ //verify buyer
     const email = req.params.email
     const query = {buyerEmail: email}
     const result = await taskApplyCollection.find(query).toArray()
     res.send(result)
   })
-  app.post('/worker/apply/task',verifyToken, async(req, res)=>{   
+  app.post('/worker/apply/task',verifyToken, verifyWorker, async(req, res)=>{   //verifyWorker
       const task = req.body
       const result = await taskApplyCollection.insertOne(task)
       res.send(result)
     }) 
-    app.patch('/apply/task/status/update/:id',verifyToken, async(req, res)=>{ //verifyBuyer
+    app.patch('/apply/task/status/update/:id',verifyToken,verifyBuyer, async(req, res)=>{ //verifyBuyer
       const id = req.params.id
       const status = req.body 
       const filter = {_id: new ObjectId(id)}
@@ -312,16 +360,16 @@ async function run() {
 
 
     // buyer payment
-    app.post('/payment',verifyToken, async(req, res)=>{ //buyerVerify
+    app.post('/payment',verifyToken,verifyBuyer, async(req, res)=>{ //buyerVerify
       const query = req.body
       const result = await paymentCollection.insertOne(query)
       res.send(result)
     })
-    app.get('/payment', verifyToken, async(req, res)=>{ //verifyAdmin
+    app.get('/payment', verifyToken,verifyAdmin, async(req, res)=>{ //verifyAdmin
       const result = await paymentCollection.find().toArray()
       res.send(result)
     })
-    app.get('/payment/:email', verifyToken, async(req, res)=>{// verifyBuyer
+    app.get('/payment/:email', verifyToken,verifyBuyer, async(req, res)=>{// verifyBuyer
       const email = req.params.email
       const query = {email: email}
       const result  = await paymentCollection.find(query).toArray()
@@ -335,11 +383,11 @@ async function run() {
 
 
     // worker withdraw
-    app.get('/withdraw',verifyToken, async(req, res)=>{ //verifyAdmin
+    app.get('/withdraw',verifyToken,verifyAdmin, async(req, res)=>{ //verifyAdmin
       const result = await withdrawCollection.find().toArray()
       res.send(result)
     })
-    app.post('/withdraw', verifyToken, async(req, res)=>{ //verifyWorker
+    app.post('/withdraw', verifyToken,verifyWorker, async(req, res)=>{ //verifyWorker
       const query = req.body
       const result = await withdrawCollection.insertOne(query)
       res.send(result)
@@ -351,7 +399,7 @@ async function run() {
       req.send(result)
     })
 
-    app.patch('/withdraw/status/update/:id',verifyToken, async(req, res)=>{ //verifyAdmin
+    app.patch('/withdraw/status/update/:id',verifyToken,verifyAdmin,async(req, res)=>{ //verifyAdmin
       const id = req.params.id
       const status = req.body 
       const filter = {_id: new ObjectId(id)}
