@@ -169,9 +169,24 @@ async function run() {
 
     // task
     app.get('/task', verifyToken, async(req, res)=>{ 
-      const result = await taskCollection.find().toArray()
+      const page = parseInt(req.query.page)
+      const size = parseInt(req.query.size)
+      console.log('pagination', req.params)
+      const result = await taskCollection.find()
+      .skip(page*size)
+      .limit(size)
+      .toArray()
       res.send(result)
     })
+
+    app.get('/pagination/count',verifyToken, async(req, res)=>{
+      const count = await taskCollection.estimatedDocumentCount()
+      res.send({count})
+    })
+
+
+
+
     app.get('/per/task/:id',   async(req, res)=>{ 
       const id = req.params.id
       const query = {_id: new ObjectId(id)}
@@ -207,19 +222,7 @@ async function run() {
       const result = await taskCollection.updateOne(filter, updateDoc);
       res.send(result); 
   });
-  // app.patch('/task/worker/update/:id', verifyToken, async (req, res) => { 
-  //   const id = req.params.id; 
-  //   const query = { _id: new ObjectId(id) };  
-  //   const   {after_required_workers}  = req.body; 
-  //   console.log(after_required_workers)
-
-  //   const updateDoc = {
-  //     $set: { required_workers: after_required_workers },
-  //   };
-   
-  //     const result = await taskCollection.updateOne(query, updateDoc); 
-  //     res.send(result)
-  // });
+ 
   
   app.patch('/task/worker/update/:id', verifyToken, async (req, res) => {
     const id = req.params.id;
@@ -249,6 +252,8 @@ async function run() {
         res.status(500).send({ error: "An error occurred while updating the task." });
     }
 });
+
+
 
  
 
