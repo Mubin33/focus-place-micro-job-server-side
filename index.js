@@ -152,6 +152,21 @@ async function run() {
 
 
 
+    // top worker
+    app.get('/top/worker', async(req, res)=>{ 
+      const result = await userCollection 
+      .find({ role: "worker" })
+      .sort({ amount: -1 }) 
+      .limit(6) 
+      .toArray()
+      res.send(result)
+    })
+
+
+
+
+
+
 
 
 
