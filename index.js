@@ -71,6 +71,7 @@ async function run() {
     const taskApplyCollection = client.db('focusPlace').collection('task-apply') 
     const paymentCollection = client.db('focusPlace').collection('payment') 
     const withdrawCollection = client.db('focusPlace').collection('withdraw') 
+    const notificationCollection = client.db('focusPlace').collection('notification') 
 
     
 
@@ -363,7 +364,12 @@ async function run() {
       const result = await taskApplyCollection.updateOne(filter, updated)
       res.send(result)
     })
-
+    app.get('/submission/details/:id', async(req, res)=>{
+      const id = req.params.id
+      const query={_id: new ObjectId(id)}
+      const result = await taskApplyCollection.findOne(query)
+      res.send(result)
+    })
 
 
 
@@ -435,6 +441,52 @@ async function run() {
 
 
 
+
+
+    // notification Collection
+    app.post('/notification', verifyToken, async(req, res)=>{
+      const massage = req.body
+      const result = await notificationCollection.insertOne(massage)
+      res.send(result)
+    })
+    app.get('/notification/:email', verifyToken,async(req, res)=>{
+      const email = req.params.email
+      const query = {toEmail:email}
+      const result = await notificationCollection.find(query).toArray()
+      res.send(result)
+    })
+    app.get('/notification', verifyToken,async(req, res)=>{ 
+      const query = {toRole : 'admin'}
+      const result = await notificationCollection.find(query).toArray()
+      res.send(result)
+    })
+    app.patch('/update/notification/:email', verifyToken, async(req, res)=>{
+      const email = req.params.email
+      const filter = {toEmail:email}
+      const updateDoc = {
+        $set:{
+          status:'done'
+        }
+      }
+      const result = await notificationCollection.updateMany(filter, updateDoc)
+      res.send(result)
+    })
+    app.patch('/update/notification', verifyToken, async(req, res)=>{ 
+      const filter = {toRole:'admin'}
+      const updateDoc = {
+        $set:{
+          status:'done'
+        }
+      }
+      const result = await notificationCollection.updateMany(filter, updateDoc)
+      res.send(result)
+    })
+
+
+
+
+  
+  
 
  
   
