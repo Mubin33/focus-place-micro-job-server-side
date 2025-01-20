@@ -9,8 +9,12 @@ const Stripe = require("stripe");
 
 const stripe = new Stripe(`${process.env.PAYMENT_SECRET_KEY}`);
 
-
-app.use(cors())
+const corsOptions = {
+  origin: ["http://localhost:5173", "http://localhost:5174","https://focus-place-micro-job-placement.surge.sh","http://focus-place-micro-job-placement.surge.sh"],
+  credentials: true,
+  optionSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
 app.use(express.json()) 
 app.use(morgan("dev"));
 
@@ -77,7 +81,7 @@ async function run() {
 
 
     const verifyToken = (req, res, next)=>{
-      // console.log(req.headers.authorization)
+      // //console.log(req.headers.authorization)
       const isToken = req.headers.authorization
       if(!isToken){
         return res.status(401).send({massage:"UnAuthorize"})
@@ -215,7 +219,7 @@ async function run() {
     app.patch('/users/amount/update/:email', verifyToken, async (req, res) => { 
       const email = req.params.email; 
       const { amount } = req.body; 
-      console.log(amount)
+      //console.log(amount)
       const filter = { email: email };  
       const updateDoc = {
         $set: {
@@ -235,7 +239,7 @@ async function run() {
     app.get('/task', verifyToken, async(req, res)=>{ 
       const page = parseInt(req.query.page)
       const size = parseInt(req.query.size)
-      console.log('pagination', req.params)
+      //console.log('pagination', req.params)
       const result = await taskCollection.find()
       .skip(page*size)
       .limit(size)
@@ -493,7 +497,7 @@ async function run() {
 
     
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    //console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -511,5 +515,5 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
+  //console.log(`Example app listening on port ${port}`)
 })
